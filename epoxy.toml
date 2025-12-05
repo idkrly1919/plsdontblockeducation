@@ -4,6 +4,6 @@ bind = ["tcp", "localhost:1338"]
 [stream]
 allow_hosts = ["^.*$"]
 block_hosts = []
-allow_direct_ip = false
-allow_loopback = false
-allow_udp = false
+allow_direct_ip = true
+allow_loopback = true
+allow_udp = true
