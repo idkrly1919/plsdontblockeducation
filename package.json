@@ -11,7 +11,7 @@
 		"dev": "vite",
 		"build": "vite build",
 		"preview": "vite preview",
-		"start": "pnpm run build && node src/index.js",
+		"start": "npm run build && node src/index.js",
 		"format": "prettier --config .prettierrc.js --write .",
 		"lint": "eslint ./src/",
 		"lint:fix": "eslint ./src/ --fix"
@@ -27,16 +27,21 @@
 		"@mercuryworkshop/epoxy-transport": "^2.1.28",
 		"@mercuryworkshop/scramjet": "https://github.com/FoxMoss/browser.js/releases/download/latest/mercuryworkshop-scramjet-1.0.4-dev.tgz",
 		"@mercuryworkshop/wisp-js": "^0.3.3",
+		"daisyui": "^4.12.0",
 		"fastify": "^5.4.0",
+		"lucide-svelte": "^0.395.0",
 		"ws": "^8.18.3"
 	},
 	"devDependencies": {
+		"autoprefixer": "^10.4.19",
 		"eslint": "^9.13.0",
+		"postcss": "^8.4.38",
 		"prettier": "^3.3.3",
 		"@sveltejs/vite-plugin-svelte": "3.1.1",
-		"@sveltejs/tsconfig": "5.1.0",
+		"@sveltejs/tsconfig": "^5.0.0",
 		"svelte": "4.2.18",
 		"svelte-routing": "2.13.0",
+		"tailwindcss": "^3.4.4",
 		"tslib": "2.6.3",
 		"typescript": "5.2.2",
 		"vite": "5.3.5"
