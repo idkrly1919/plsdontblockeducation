@@ -1,13 +1,13 @@
 <script lang="ts">
-    import Config from "./Config.svelte";
-    import config from "./config.svelte";
-    import proxyManager from "./proxy.svelte";
-    import { onEnterKeyPressed } from "./util";
-    import autoProxyProber from "./prober.svelte";
-    import { History } from "./history";
-    import Games from "./Games.svelte";
+    import Config from "./lib/components/Config.svelte";
+    import config from "./lib/ts/config.svelte";
+    import proxyManager from "./lib/ts/proxy.svelte";
+    import { onEnterKeyPressed } from "./lib/ts/util";
+    import autoProxyProber from "./lib/ts/prober.svelte";
+    import { History } from "./lib/ts/history";
+    import Games from "./lib/components/Games.svelte";
     import Classroom from "./classroom/Classroom.svelte";
-    import { brandIcons } from "./icons";
+    import { brandIcons } from "./lib/ts/icons";
     import {
         Search,
         Settings2,
@@ -16,7 +16,8 @@
         ArrowLeft,
         X,
         Gamepad2,
-    } from "@lucide/svelte";
+        Maximize2,
+    } from "lucide-svelte";
     import { onMount } from "svelte";
     import { fade, fly } from "svelte/transition";
 
@@ -28,7 +29,8 @@
         }
     });
 
-    onMount(() => {
+    onMount(async () => {
+        await proxyManager.initializeProxy();
         if (document) {
             document.title = localStorage.getItem("tabTitle") || "Classroom";
             const faviconElement = document.querySelector<HTMLLinkElement>("link[rel~='icon']");
@@ -86,9 +88,7 @@
 
     function onIframeLoad() {
         if (iframe == undefined) return;
-        const src = iframe.contentWindow.location.pathname;
-        if (!src.includes(proxyManager.uvConfig.prefix)) return;
-
+        
         iframeHasLoaded = true;
                     
         if (searchbar) {
@@ -96,9 +96,8 @@
         }
         destinationInput = proxyManager.url;
 
-        proxyManager.url = proxyManager.uvConfig.decodeUrl(
-            src.slice(proxyManager.uvConfig.prefix.length),
-        );
+        // This part is tricky with Scramjet as it doesn't expose the decoded URL easily post-load.
+        // We will rely on the URL we set initially.
     }
 
     let proxyHistory = new History();
@@ -199,7 +198,7 @@
                     <div class="flex items-center gap-1 px-2 border-r border-zinc-800">
                         <button class="btn btn-ghost btn-circle btn-sm text-zinc-400 hover:text-white hover:bg-zinc-800" onclick={() => setUrl(proxyHistory.goBackward())}><ArrowLeft size={18} /></button>
                         <button class="btn btn-ghost btn-circle btn-sm text-zinc-400 hover:text-white hover:bg-zinc-800" onclick={() => setUrl(proxyHistory.goForward())}><ArrowRight size={18} /></button>
-                        <button class="btn btn-ghost btn-circle btn-sm text-zinc-400 hover:text-white hover:bg-zinc-800" onclick={() => iframe.contentWindow.location.reload()}><RotateCw size={16} /></button>
+                        <button class="btn btn-ghost btn-circle btn-sm text-zinc-400 hover:text-white hover:bg-zinc-800" onclick={() => iframe.contentWindow?.location.reload()}><RotateCw size={16} /></button>
                     </div>
                     <div class="relative w-64 group">
                         <input
