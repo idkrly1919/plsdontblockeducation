@@ -63,7 +63,6 @@
     let destinationInput = $state("");
     let view = $state("classroom"); 
     let isConfigOpen = $state(false);
-    let isWarping = $state(false);
 
     function startProxy(url?: string) {
         const dest = url || destinationInput;
@@ -95,9 +94,6 @@
             searchbar.value = proxyManager.url;
         }
         destinationInput = proxyManager.url;
-
-        // This part is tricky with Scramjet as it doesn't expose the decoded URL easily post-load.
-        // We will rely on the URL we set initially.
     }
 
     let proxyHistory = new History();
@@ -109,27 +105,6 @@
         if (url == null) return;
         proxyManager.url = url;
         proxyManager.reloadIframe();
-    }
-
-    // Typing effect for "Welcome to..."
-    let welcomeText = "verdis."; 
-    let typedText = $state("v");
-
-    $effect(() => {
-        if (view === 'welcome' && typedText.length < welcomeText.length) {
-            const timeout = setTimeout(() => {
-                typedText = welcomeText.slice(0, typedText.length + 1);
-            }, 150);
-            return () => clearTimeout(timeout);
-        }
-    });
-
-    function triggerWarp() {
-        isWarping = true;
-        setTimeout(() => {
-            view = 'home';
-            isWarping = false;
-        }, 1500);
     }
 
     const shortcuts = [
@@ -164,7 +139,7 @@
 <!-- Only show star background when NOT in classroom view -->
 {#if view !== 'classroom'}
     <div class="fixed inset-0 z-0 pointer-events-none bg-black overflow-hidden">
-        <div class="star-container {isWarping ? 'warp' : ''}">
+        <div class="star-container">
             <div class="stars"></div>
         </div>
         <!-- Blue Glow at Bottom -->
@@ -221,14 +196,14 @@
     {:else if view === 'classroom'}
         <!-- Google Classroom Clone -->
         <div class="relative z-10" transition:fade={{ duration: 300 }}>
-            <Classroom enterApp={() => view = 'welcome'} />
+            <Classroom enterApp={() => view = 'home'} />
         </div>
 
     {:else if view === 'games'}
         <div class="relative z-10">
             <Games bind:view />
         </div>
-    {:else if view === 'home'}
+    {:else}
         <!-- Dashboard Home -->
         <div class="relative z-10 min-h-screen flex flex-col items-center justify-center p-4" transition:fade={{ duration: 1000 }}>
             <!-- Navigation Buttons (Floating Top Right) -->
@@ -278,52 +253,10 @@
                 </div>
             </div>
         </div>
-
-    {:else}
-        <!-- Welcome Screen -->
-        <div class="relative z-10 min-h-screen flex flex-col items-center justify-center text-center p-4">
-            {#if !isWarping}
-                <div class="flex flex-col items-center justify-center" transition:fade={{ duration: 500 }}>
-                    <h1 class="text-6xl md:text-7xl font-bold mb-4 tracking-tight">
-                        Welcome to <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 text-glow">{typedText}</span><span class="animate-pulse text-blue-400">|</span>
-                    </h1>
-                    <p class="text-zinc-400 text-xl mb-12 font-light">Start your unblocking journey today!</p>
-                    
-                    <button 
-                        class="glass-button px-8 py-3 rounded-full font-bold text-lg transition-all duration-300 flex items-center gap-2 group"
-                        onclick={triggerWarp}
-                    >
-                        Get Started
-                        <span class="group-hover:translate-x-1 transition-transform">✨</span>
-                    </button>
-                </div>
-            {/if}
-        </div>
     {/if}
 </div>
 
 <style>
-    /* Liquid Glass Button */
-    .glass-button {
-        background: rgba(255, 255, 255, 0.05);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-        position: relative;
-        overflow: hidden;
-    }
-
-    .glass-button:hover {
-        background: linear-gradient(to right, #2563eb, #9333ea);
-        border-color: transparent;
-        box-shadow: 0 0 20px rgba(37, 99, 235, 0.5);
-        transform: scale(1.05);
-    }
-
-    .text-glow {
-        text-shadow: 0 0 20px rgba(139, 92, 246, 0.5), 0 0 40px rgba(59, 130, 246, 0.3);
-    }
-
     /* Optimized Star Animation */
     .star-container {
         position: absolute;
@@ -358,13 +291,6 @@
         animation: star-scroll 60s linear infinite;
         opacity: 0.7;
         transition: transform 2s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s ease;
-    }
-
-    .star-container.warp .stars {
-        animation-duration: 0.2s; 
-        transform: scaleY(20); 
-        opacity: 0.5; 
-        filter: blur(1px);
     }
     
     @keyframes star-scroll {
