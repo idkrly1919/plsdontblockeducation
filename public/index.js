@@ -1,28 +1,14 @@
 "use strict";
-/**
- * @type {HTMLFormElement}
- */
-const form = document.getElementById("sj-form");
-/**
- * @type {HTMLInputElement}
- */
-const address = document.getElementById("sj-address");
-/**
- * @type {HTMLInputElement}
- */
-const searchEngine = document.getElementById("sj-search-engine");
-/**
- * @type {HTMLParagraphElement}
- */
-const error = document.getElementById("sj-error");
-/**
- * @type {HTMLPreElement}
- */
-const errorCode = document.getElementById("sj-error-code");
+
+const form = document.getElementById("proxy-form");
+const input = document.getElementById("proxy-input");
+const errorMessage = document.getElementById("error-message");
+const errorCode = document.getElementById("error-code");
+const frame = document.getElementById("content-frame");
 
 const { ScramjetController } = $scramjetLoadController();
 
-let wispUrl =
+const wispUrl =
 	(location.protocol === "https:" ? "wss" : "ws") +
 	"://" +
 	location.host +
@@ -38,41 +24,46 @@ const scramjet = new ScramjetController({
 });
 
 scramjet.init();
-// const connection = new BareMux.BareMuxConnection("/baremux/worker.js");
 
-if (form != undefined) {
-	form.addEventListener("submit", async (event) => {
-		event.preventDefault();
+form.addEventListener("submit", async (event) => {
+	event.preventDefault();
+	errorMessage.textContent = "";
+	errorCode.textContent = "";
 
-		try {
-			if (!(await registerSW())) {
-				setTimeout(() => window.location.reload(), 1000);
-			}
-		} catch (err) {
-			error.textContent = "Failed to register service worker.";
-			errorCode.textContent = err.toString();
-			throw err;
-		}
+	try {
+		await registerSW();
+	} catch (err) {
+		errorMessage.textContent = "Failed to register service worker.";
+		errorCode.textContent = err.toString();
+		return;
+	}
 
-		const url = search(address.value, searchEngine.value);
+	const url = search(input.value);
+	const encodedUrl = scramjet.encodeUrl(url);
 
-		let frame = document.getElementById("sj-frame");
-		frame.style.display = "block";
-		// if ((await connection.getTransport()) !== "/epoxy/index.mjs") {
-		//   await connection.setTransport("/epoxy/index.mjs", [{ wisp: wispUrl }]);
-		// }
-		const sjEncode = scramjet.encodeUrl.bind(scramjet);
-		frame.addEventListener("load", (event) => {
-			window.history.pushState(
-				{},
-				"Scramjet",
-				"/share" +
-					event.target.contentWindow.location.href.split(
-						event.target.contentWindow.location.host
-					)[1]
-			);
-		});
-		frame.src = sjEncode(url);
-		window.history.pushState({}, "Scramjet", "/share" + sjEncode(url));
+	frame.src = encodedUrl;
+	frame.style.display = "block";
+	document.body.classList.add("iframe-visible");
+
+	frame.addEventListener("load", () => {
+		const frameLocation = frame.contentWindow.location.toString();
+		const newPath =
+			"/view/" + frameLocation.split(window.location.origin)[1];
+		window.history.pushState({}, "", newPath);
 	});
+
+	window.history.pushState({}, "", "/view/" + encodedUrl);
+});
+
+function search(input, template = "https://www.google.com/search?q=%s") {
+	try {
+		return new URL(input).toString();
+	} catch (err) {}
+
+	try {
+		const url = new URL(`http://${input}`);
+		if (url.hostname.includes(".")) return url.toString();
+	} catch (err) {}
+
+	return template.replace("%s", encodeURIComponent(input));
 }

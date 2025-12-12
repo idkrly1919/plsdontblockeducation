@@ -1,159 +1,124 @@
-@import url("https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap");
+
+:root {
+	--background: #0d1117;
+	--container-bg: #161b22;
+	--border-color: #30363d;
+	--text-primary: #c9d1d9;
+	--text-secondary: #8b949e;
+	--accent-color: #58a6ff;
+	--accent-hover: #388bfd;
+	--error-color: #f85149;
+}
+
+* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+}
 
 body {
-	font-family: "Roboto", Arial, Helvetica, sans-serif;
-	margin: 0;
-	background: #111;
-	display: flex;
-	flex-direction: column;
-	min-height: 100vh;
-}
-
-.flex-center {
+	font-family: "Inter", sans-serif;
+	background-color: var(--background);
+	color: var(--text-primary);
 	display: flex;
 	justify-content: center;
-}
-
-.header-center {
 	align-items: center;
-	flex-direction: column;
-	margin-top: 10%;
+	min-height: 100vh;
+	transition: opacity 0.3s ease-in-out;
 }
 
-.left-margin {
-	margin: 0px 16px;
+body.iframe-visible .container {
+	display: none;
 }
 
-#sj-frame {
+.container {
+	text-align: center;
+	padding: 2rem;
+	max-width: 600px;
+	width: 90%;
+}
+
+header h1 {
+	font-size: 3rem;
+	font-weight: 700;
+	margin-bottom: 0.5rem;
+}
+
+header p {
+	font-size: 1.1rem;
+	color: var(--text-secondary);
+	margin-bottom: 2rem;
+}
+
+#proxy-form {
+	display: flex;
+	width: 100%;
+	border-radius: 8px;
+	border: 1px solid var(--border-color);
+	background-color: var(--container-bg);
+	overflow: hidden;
+	transition: border-color 0.2s;
+}
+
+#proxy-form:focus-within {
+	border-color: var(--accent-color);
+}
+
+#proxy-input {
+	flex-grow: 1;
+	background: none;
 	border: none;
-	position: absolute;
+	outline: none;
+	padding: 0.9rem 1.2rem;
+	font-size: 1rem;
+	color: var(--text-primary);
+}
+
+#proxy-input::placeholder {
+	color: var(--text-secondary);
+}
+
+#proxy-form button {
+	background-color: var(--accent-color);
+	color: white;
+	border: none;
+	padding: 0 1.5rem;
+	font-size: 1rem;
+	font-weight: 500;
+	cursor: pointer;
+	transition: background-color 0.2s;
+}
+
+#proxy-form button:hover {
+	background-color: var(--accent-hover);
+}
+
+.error-container {
+	margin-top: 1rem;
+	min-height: 4em;
+}
+
+#error-message {
+	color: var(--error-color);
+	margin-bottom: 0.5rem;
+}
+
+#error-code {
+	font-family: monospace;
+	font-size: 0.8rem;
+	color: var(--text-secondary);
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+#content-frame {
+	display: none;
+	position: fixed;
 	top: 0;
 	left: 0;
-	width: 100vw;
-	height: 100vh;
-	background-color: #111;
-}
-
-#sj-error {
-	color: #ff6666 !important;
-	white-space: pre-wrap;
-}
-
-#sj-error-code {
-	font-size: 12px;
-	color: #fff;
-	font-family: "Courier New", Courier, monospace;
-}
-
-.logo {
-	height: 25vh;
-}
-
-.logo-wrapper .text {
-	font-size: 75px;
-	color: #fff;
-}
-
-.logo-wrapper h1 {
-	color: white;
-}
-
-footer {
-	margin: 0 16px;
-	margin-top: auto;
-	display: flex;
-	flex-direction: column;
-	line-height: 30px;
-	margin-bottom: 20px;
-}
-
-footer > div {
-	display: flex;
-	justify-content: left;
-	align-items: center;
-	flex-wrap: wrap;
-	margin-bottom: 15px;
-}
-
-footer a,
-footer span {
-	margin: 0 15px;
-	text-decoration: none;
-	color: #fff;
-	font-size: 15px;
-}
-
-footer a {
-	cursor: pointer;
-}
-
-footer a:hover {
-	text-decoration: underline;
-}
-
-.desc p {
-	width: 560px;
-	color: rgba(253, 253, 253, 0.514);
-}
-
-#sj-address {
-	background: none;
-	font-family: inherit;
-	padding: 0px 17px;
-	height: 48px;
-	border: 1px solid rgb(255, 255, 255, 0.2);
-	color: var(--text-color);
-	border-radius: 3px;
-	outline: none;
-	width: 350px;
-	margin-top: 5px;
-	border-radius: 50px;
-	color: #fff;
-	transition: border-radius 0.1s;
-}
-
-#sj-address:focus {
-	border: 1px solid rgba(253, 253, 253, 0.514);
-	border-radius: 6px;
-}
-
-.credit {
-	border-radius: 10px;
-	padding: 10px;
-	display: block;
-	border: #fff 1px solid;
-	color: #fff;
-	display: flex;
-	flex-wrap: wrap;
-	margin-bottom: 15px;
-}
-
-.credit label {
-	margin-left: auto;
-	margin-right: 15px;
-}
-
-.credit a,
-.credit label {
-	color: white;
-	text-decoration: underline;
-	text-align: right;
-}
-
-.credit pre {
-	display: none;
 	width: 100%;
-}
-
-.credit label::after {
-	content: "show license";
-	cursor: pointer;
-}
-
-.credit input:checked + label::after {
-	content: "hide license";
-}
-
-.credit input:checked ~ pre {
-	display: block;
+	height: 100%;
+	border: none;
+	background-color: #fff;
 }
