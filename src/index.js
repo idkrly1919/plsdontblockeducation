@@ -9,7 +9,7 @@ import { scramjetPath } from "@mercuryworkshop/scramjet/path";
 import { epoxyPath } from "@mercuryworkshop/epoxy-transport";
 import { baremuxPath } from "@mercuryworkshop/bare-mux/node";
 
-const publicPath = fileURLToPath(new URL("../public/", import.meta.url));
+const distPath = fileURLToPath(new URL("../dist/", import.meta.url));
 
 // Wisp Configuration: Refer to the documentation at https://www.npmjs.com/package/@mercuryworkshop/wisp-js
 
@@ -36,7 +36,7 @@ const fastify = Fastify({
 });
 
 fastify.register(fastifyStatic, {
-	root: publicPath,
+	root: distPath,
 	decorateReply: true,
 });
 
@@ -59,7 +59,8 @@ fastify.register(fastifyStatic, {
 });
 
 fastify.setNotFoundHandler((res, reply) => {
-	return reply.code(404).type("text/html").sendFile("404.html");
+	// Send the main index.html for any unhandled routes, for client-side routing.
+	return reply.code(200).type("text/html").sendFile("index.html");
 });
 
 fastify.server.on("listening", () => {

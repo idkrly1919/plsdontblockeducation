@@ -8,7 +8,10 @@
 		"node": ">=16.0.0"
 	},
 	"scripts": {
-		"start": "node src/index.js",
+		"dev": "vite",
+		"build": "vite build",
+		"preview": "vite preview",
+		"start": "pnpm run build && node src/index.js",
 		"format": "prettier --config .prettierrc.js --write .",
 		"lint": "eslint ./src/",
 		"lint:fix": "eslint ./src/ --fix"
@@ -29,7 +32,14 @@
 	},
 	"devDependencies": {
 		"eslint": "^9.13.0",
-		"prettier": "^3.3.3"
+		"prettier": "^3.3.3",
+		"@sveltejs/vite-plugin-svelte": "3.1.1",
+		"@sveltejs/tsconfig": "5.1.0",
+		"svelte": "4.2.18",
+		"svelte-routing": "2.13.0",
+		"tslib": "2.6.3",
+		"typescript": "5.2.2",
+		"vite": "5.3.5"
 	},
 	"packageManager": "pnpm@9.12.2"
 }
