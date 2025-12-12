@@ -1,25 +1,10 @@
-import { BareMuxConnection } from "@mercuryworkshop/bare-mux";
-import ProxyComponent from "./Proxy.svelte";
-import config from "./config.svelte";
-import { httpUrlToWebSocket } from "./util";
-import autoProxyProber from "./prober.svelte";
 import { adBlocklist } from "./adBlocklist";
+import config from "./config.svelte";
 
-let iframeHasLoaded = $state(true);
-let proxyStarted = $state(false);
-
-interface UvConfig {
-    prefix: string;
-    encodeUrl: (s: string) => string;
-    decodeUrl: (s: string) => string;
-    handler: string;
-    client: string;
-    bundle: string;
-    config: string;
-    sw: string;
-    stockSW: string;
-    loc: string;
-}
+// Scramjet's controller is loaded dynamically from scripts included in the main HTML.
+// We declare it here so TypeScript knows it exists.
+declare const $scramjetLoadController: any;
+const { ScramjetController } = $scramjetLoadController();
 
 export class ServiceWorkerConfig {
     blocklist: Set<string> = new Set();
@@ -30,66 +15,36 @@ export class ServiceWorkerConfig {
 }
 
 export class ProxyManager {
-    // set in index.html
-    uvConfig: UvConfig;
-    bareMuxConnection: BareMuxConnection;
-    swBroadcastChannel: BroadcastChannel;
+    scramjet: any; // This will hold the ScramjetController instance
     serviceWorker: ServiceWorker | null = $state(null);
 
-    constructor() {
-        this.swBroadcastChannel = new BroadcastChannel("UvServiceWorker");
-        this.swBroadcastChannel.addEventListener("message", (() => {
-            navigator.serviceWorker.getRegistration(this.uvConfig.sw).then(((sw: ServiceWorkerRegistration) => {
-                this.serviceWorker = sw.active;
-                this.updateSWConfig(new ServiceWorkerConfig(config.adblock));
-            }).bind(this));
-        }).bind(this));
-    }
-
-    async initializeProxy() {
-        this.bareMuxConnection = new BareMuxConnection(this.uvConfig.loc + "/baremux/worker.js");
-        await this.registerSW();
-        await this.setProxyServer(this.proxyUrl);
-    }
-
-    async setProxyServer(proxyUrl: string) {
-        if (proxyUrl == "") return;
-        const loc = this.uvConfig.loc;
-
-        if (config.useBare) {
-            this.bareMuxConnection.setTransport(loc + "/baremod/index.mjs", [
-                proxyUrl
-            ]);
-        } else {
-            // set to websocket protocol
-            this.bareMuxConnection.setTransport(loc + "/libcurl/index.mjs", [
-                { wisp: httpUrlToWebSocket(proxyUrl) },
-            ]);
-        }
-    }
-
-    // set when ProxyComponent loads
-    proxyComponent: ProxyComponent | undefined;
-
     isProxyOpen: boolean = $state(false);
-    
     url: string = $state("");
     iframeUrl: string = $state("");
-    reloadIframe() {
-        this.iframeUrl = this.uvConfig.prefix + this.uvConfig.encodeUrl(this.url);
+
+    async initializeProxy() {
+        const wispUrl = (location.protocol === "https:" ? "wss" : "ws") + "://" + location.host + "/wisp/";
+
+        this.scramjet = new ScramjetController({
+            files: {
+                wasm: "/scram/scramjet.wasm.wasm",
+                all: "/scram/scramjet.all.js",
+                sync: "/scram/scramjet.sync.js",
+            },
+            wisp: wispUrl,
+        });
+
+        await this.scramjet.init();
+        await this.registerSW();
     }
 
-    proxyUrl = $derived.by(() => {
-        if (config.useBare) {
-            if (config.bareSelectedProxy === "auto") return autoProxyProber.bareUrl;
-            else if (config.bareSelectedProxy === "custom") return config.bareCustomProxy;
-            else return config.bareSelectedProxy;
-        } else {
-            if (config.wispSelectedProxy === "auto") return autoProxyProber.wispUrl;
-            else if (config.wispSelectedProxy === "custom") return config.wispCustomProxy;
-            else return config.wispSelectedProxy;
+    reloadIframe() {
+        if (!this.scramjet) {
+            console.error("Scramjet controller not initialized.");
+            return;
         }
-    });
+        this.iframeUrl = this.scramjet.encodeUrl(this.url);
+    }
 
     setDestination(destination: string) {
         if (destination === "") {
@@ -113,37 +68,33 @@ export class ProxyManager {
 
     async registerSW() {
         if (!navigator.serviceWorker) {
-            if (
-                location.protocol !== "https:" &&
-                !["localhost", "127.0.0.1"].includes(location.hostname)
-            )
-                throw new Error(
-                    "Service workers cannot be registered without https.",
-                );
-
             throw new Error("Your browser doesn't support service workers.");
         }
 
-        let sw = await navigator.serviceWorker.register(this.uvConfig.stockSW);
-        if (sw.active) {
-            this.serviceWorker = sw.active;
-            this.updateSWConfig(new ServiceWorkerConfig(config.adblock));
-        }
+        const registration = await navigator.serviceWorker.register('/sw.js');
+        
+        // Wait for the service worker to become active
+        await navigator.serviceWorker.ready;
+
+        this.serviceWorker = registration.active;
+        this.updateSWConfig(new ServiceWorkerConfig(config.adblock));
     }
 
     async updateSWConfig(cfg: ServiceWorkerConfig) {
         if (!this.serviceWorker) return;
-        this.serviceWorker.postMessage(cfg);
+        // Convert Set to Array for postMessage
+        this.serviceWorker.postMessage({ blocklist: Array.from(cfg.blocklist) });
     }
 
     startProxy(destinationInput: string): boolean {
-        if (proxyManager.proxyUrl === "" || !proxyManager.serviceWorker)
+        if (!this.scramjet || !this.serviceWorker) {
+            console.error("Proxy service not ready.");
             return false;
+        }
     
-        proxyManager.setDestination(destinationInput);
-        proxyManager.isProxyOpen = true;
-        console.log("States updated")
-        proxyManager.reloadIframe();
+        this.setDestination(destinationInput);
+        this.isProxyOpen = true;
+        this.reloadIframe();
     
         return true;
     }
