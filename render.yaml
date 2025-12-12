@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: scramjet-demo
+    env: node
+    buildCommand: pnpm install
+    startCommand: pnpm start
+    plan: free
+    envVars:
+      - key: PORT
+        value: 10000
+    autoDeploy: false
