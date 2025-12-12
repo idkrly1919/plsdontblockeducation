@@ -2,7 +2,7 @@ services:
   - type: web
     name: scramjet-demo
     env: node
-    buildCommand: pnpm install
+    buildCommand: pnpm install --no-frozen-lockfile
     startCommand: pnpm start
     plan: free
     envVars:
