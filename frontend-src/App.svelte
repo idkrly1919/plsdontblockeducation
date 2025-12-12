@@ -61,6 +61,7 @@
     });
 
     let destinationInput = $state("");
+    // Ensure we start at 'classroom'
     let view = $state("classroom"); 
     let isConfigOpen = $state(false);
 
